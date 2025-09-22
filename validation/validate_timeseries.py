@@ -13,6 +13,18 @@ TIMEFRAME_TO_DELTA = {
     "MN1": pd.DateOffset(months=1)
 }
 
+MENU_TO_TIMEFRAME = {
+    1: "M1",
+    2: "M5",
+    3: "M15",
+    4: "M30",
+    5: "H1",
+    6: "H4",
+    7: "D1",
+    8: "W1",
+    9: "MN1",
+}
+
 
 def is_timeseries_continuous(df: pd.DataFrame, timeframe: str) -> bool:
     if timeframe not in TIMEFRAME_TO_DELTA:
@@ -21,6 +33,7 @@ def is_timeseries_continuous(df: pd.DataFrame, timeframe: str) -> bool:
     expected_delta = TIMEFRAME_TO_DELTA[timeframe]
 
     diffs = df["timestamp"].diff().dropna()
+    print(diffs)
 
     # timedelta (np. dla minut, godzin, dni)
     if isinstance(expected_delta, pd.Timedelta):
@@ -47,11 +60,17 @@ def get_valid_file(prompt: str) -> str:
 if __name__ == "__main__":
     file = get_valid_file("Enter the file location: ")
     df = pd.read_csv(file, sep=";", parse_dates=["timestamp"])
-    csv_lenght = 0
 
-    for i in df.index:
-        csv_lenght += 1
+    for key, tf in MENU_TO_TIMEFRAME.items():
+        print(f"     {key} - {tf}")
 
-    print("csv file lenght: ", csv_lenght)
-    print("data types: \n", df.dtypes)
-    print("head: ", df.head())
+    while True:
+        choice = input("Select timeframe: ").strip()
+        if choice.isdigit():
+            choice = int(choice)
+            if choice in MENU_TO_TIMEFRAME:
+                tf_str = MENU_TO_TIMEFRAME[choice]
+                result = is_timeseries_continuous(df, tf_str)
+                print("Continuity check:", result)
+                break
+        print("Invalid timeframe. Try again.")
