@@ -40,3 +40,47 @@ def is_timeseries_continuous(df: pd.DataFrame, timeframe: str) -> bool:
         return (df["timestamp"].dropna() == shifted.dropna()).all()
 
     return False
+
+
+def get_timeseries_break(df: pd.DataFrame, timeframe: str) -> list[dict]:
+    if timeframe not in TIMEFRAME_TO_DELTA:
+        raise ValueError(f"Unsupported timeframe: {timeframe}")
+
+    expected_delta = TIMEFRAME_TO_DELTA[timeframe]
+    breaks: list[dict] = []
+
+    prev_ts = None
+    current_break = None
+
+    for idx, row in df.iterrows():
+        ts = row["timestamp"]
+
+        if prev_ts is None:
+            prev_ts = ts
+            continue
+
+        diff = ts - prev_ts
+
+        if isinstance(expected_delta, pd.Timedelta):
+            gap_detected = diff != expected_delta
+        else:  # DateOffset (np. miesiące)
+            gap_detected = ts != prev_ts + expected_delta
+
+        if gap_detected:
+            if current_break is None:
+                current_break = {"start":
+                                 prev_ts.strftime("%Y-%m-%d %H:%M:%S"),
+                                 "end": ts.strftime("%Y-%m-%d %H:%M:%S")}
+            else:
+                current_break["end"] = ts.strftime("%Y-%m-%d %H:%M:%S")
+        else:
+            if current_break is not None:
+                breaks.append(current_break)
+                current_break = None
+
+        prev_ts = ts
+
+    if current_break is not None:
+        breaks.append(current_break)
+
+    return breaks
