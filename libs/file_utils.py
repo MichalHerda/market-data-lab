@@ -21,6 +21,16 @@ def get_valid_folder(prompt: str) -> str:
             print(f" Folder '{folder}' does not exist. Please try again.\n")
 
 
+def get_valid_path(prompt: str) -> str:
+    """Asks the user for a path to an existing file or folder"""
+    while True:
+        path = input(prompt).strip('"').strip("'")
+        if os.path.exists(path):
+            return path
+        else:
+            print(f" Path '{path}' does not exist. Please try again.\n")
+
+
 def list_structure(base_folder: str) -> dict:
     """Builds a dictionary: {subfolder: [files]}"""
     structure = {}
