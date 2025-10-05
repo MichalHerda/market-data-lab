@@ -5,123 +5,150 @@ import libs.csv_utils as cu
 
 
 def list_csv_files(folder_path: str):
-    """List all CSV files in the given folder"""
+    """List all CSV files in a folder"""
     return [f for f in os.listdir(folder_path) if f.endswith(".csv")]
 
 
-def extract_timeframes(files):
-    """Extract timeframe labels from filenames (e.g. EURUSD_M5.csv -> M5)"""
-    timeframes = {}
-    for f in files:
-        parts = f.split("_")
-        if len(parts) > 1:
-            tf = parts[-1].replace(".csv", "")
-            timeframes[tf.upper()] = f
-    return timeframes
+def extract_symbol_and_tf(filename: str):
+    """Extract symbol and timeframe from filename like EURUSD_H1.csv"""
+    name = os.path.basename(filename).replace(".csv", "")
+    parts = name.split("_")
+    if len(parts) >= 2:
+        symbol = "_".join(parts[:-1])
+        tf = parts[-1].upper()
+        return symbol, tf
+    else:
+        return name, None
 
 
-def choose_timeframes(timeframes: dict):
-    """Let user choose multiple timeframes to merge"""
-    chosen = []
-    while True:
-        print("\nAvailable timeframes:")
-        for tf in timeframes:
-            print(f" - {tf}")
-        print("Press ENTER to start processing if you have selected at least one timeframe.")
-        choice = input("Enter timeframe to add: ").strip().upper()
-        if choice == "" and len(chosen) > 0:
-            return chosen
-        elif choice in timeframes and choice not in chosen:
-            chosen.append(choice)
-            print(f"Added timeframe: {choice}")
-        elif choice in chosen:
-            print("This timeframe is already selected.")
-        else:
-            print("Invalid timeframe. Try again.")
+def detect_time_column(df):
+    """Detect time column"""
+    for c in df.columns:
+        if c.lower() in ["date", "time", "timestamp"]:
+            return c
+    raise ValueError("No valid time column found (expected date/time/timestamp)")
 
 
 def choose_action():
     """Ask user what to do with the result"""
     while True:
         print("\nWhat would you like to do with the result?")
-        print(" 1. Overwrite one of the input CSV files")
-        print(" 2. Save as a new CSV file")
-        try:
-            choice = int(input("Your choice (1/2): ").strip())
-            if choice in (1, 2):
-                return choice
-        except ValueError:
-            pass
-        print("Invalid option. Please enter 1 or 2.\n")
+        print(" 1. Overwrite original files/folders")
+        print(" 2. Save processed results in a new folder")
+        choice = input("Your choice (1/2): ").strip()
+        if choice in ("1", "2"):
+            return int(choice)
+        print("Invalid option. Try again.")
 
 
-def detect_time_column(df):
-    """Detect which column should be used as time index"""
-    candidates = [c for c in df.columns if c.lower() in ("date", "timestamp", "time")]
-    if not candidates:
-        raise ValueError("No valid time column found (expected 'date', 'timestamp' or 'time').")
-    return candidates[0]
+def merge_group(symbol: str, files: list, folder_path: str, output_folder: str = None):
+    """Merge all timeframes for one symbol"""
+    print(f"\nMerging symbol: {symbol}")
 
-
-def main():
-    # Step 1: Ask for folder
-    folder_path = fu.get_valid_folder("Enter the path to the folder with CSV files: ")
-
-    files = list_csv_files(folder_path)
-    if not files:
-        print("No CSV files found in the given folder.")
-        return
-
-    timeframes = extract_timeframes(files)
-    if not timeframes:
-        print("No valid timeframe CSV files found.")
-        return
-
-    # Step 2: Choose timeframes
-    chosen_tfs = choose_timeframes(timeframes)
-
-    # Step 3: Load and merge CSVs
     merged_df = None
-    time_column = None
+    time_col = None
 
-    for tf in chosen_tfs:
-        file_path = os.path.join(folder_path, timeframes[tf])
+    for f in sorted(files):
+        file_path = os.path.join(folder_path, f)
         df = cu.load_csv(file_path, sep=";")
+        tf = extract_symbol_and_tf(f)[1]
+        if not tf:
+            print(f"  Skipping {f} (no timeframe found)")
+            continue
 
-        if time_column is None:
-            time_column = detect_time_column(df)
-            print(f"Using '{time_column}' as the time column.")
+        if time_col is None:
+            time_col = detect_time_column(df)
+            print(f"  Using '{time_col}' as time column")
 
-        # Upewnij się, że czas jest typu datetime
-        df[time_column] = pd.to_datetime(df[time_column])
-
-        # Rename all except the time column
-        df = df.rename(columns=lambda x: x if x == time_column else f"{x}_{tf}")
+        df[time_col] = pd.to_datetime(df[time_col])
+        df = df.rename(columns=lambda x: x if x == time_col else f"{x}_{tf}")
 
         if merged_df is None:
             merged_df = df
         else:
-            merged_df = pd.merge(merged_df, df, on=time_column, how="outer")
+            merged_df = pd.merge(merged_df, df, on=time_col, how="outer")
 
-    # Sort and forward fill bigger TFs
-    merged_df = merged_df.sort_values(by=time_column).reset_index(drop=True)
-    merged_df = merged_df.ffill()  # <-- najważniejsze: wypełnia puste wartości
+    if merged_df is not None:
+        merged_df = merged_df.sort_values(by=time_col).ffill()
+        save_name = f"{symbol}_merged.csv"
 
-    # Step 4: Decide action
-    action = choose_action()
+        if output_folder:
+            os.makedirs(output_folder, exist_ok=True)
+            save_path = os.path.join(output_folder, save_name)
+        else:
+            save_path = os.path.join(folder_path, save_name)
 
-    if action == 1:
-        overwrite_file = os.path.join(folder_path, timeframes[chosen_tfs[0]])
-        cu.save_csv(merged_df, overwrite_file, sep=";")
-        print(f"File '{overwrite_file}' overwritten with merged data.")
-    else:
-        save_path = input("Enter output CSV path: ").strip()
         cu.save_csv(merged_df, save_path, sep=";")
-        print(f"Merged data saved to '{save_path}'.")
+        print(f"  Saved merged CSV -> {save_path}")
 
-    # Step 5: Preview
-    print("\nResulting DataFrame (head):")
-    print(merged_df.head())
+
+def process_flat_folder(folder_path: str, output_folder: str = None):
+    """Process folder containing multiple symbols (flat structure)"""
+    files = list_csv_files(folder_path)
+    if not files:
+        print("No CSV files found.")
+        return
+
+    # group files by symbol
+    symbol_groups = {}
+    for f in files:
+        symbol, tf = extract_symbol_and_tf(f)
+        if symbol not in symbol_groups:
+            symbol_groups[symbol] = []
+        symbol_groups[symbol].append(f)
+
+    print(f"\nDetected {len(symbol_groups)} symbols to merge:")
+    for sym in symbol_groups:
+        print(f" - {sym}: {[extract_symbol_and_tf(f)[1] for f in symbol_groups[sym]]}")
+
+    for sym, group_files in symbol_groups.items():
+        merge_group(sym, group_files, folder_path, output_folder)
+
+
+def process_nested_folder(parent_folder: str, output_folder: str = None):
+    """Process parent folder containing instrument subfolders"""
+    subdirs = [os.path.join(parent_folder, d) for d in os.listdir(parent_folder)
+               if os.path.isdir(os.path.join(parent_folder, d))]
+
+    if not subdirs:
+        print("No subfolders found.")
+        return
+
+    for sub in sorted(subdirs):
+        process_flat_folder(sub, output_folder)
+
+
+def merge_single_file(file_path: str, output_folder: str = None):
+    """Simply copies a single CSV"""
+    df = cu.load_csv(file_path, sep=";")
+    save_path = file_path if not output_folder else os.path.join(output_folder, os.path.basename(file_path))
+    if output_folder:
+        os.makedirs(output_folder, exist_ok=True)
+    cu.save_csv(df, save_path, sep=";")
+    print(f"Single CSV processed -> {save_path}")
+
+
+def main():
+    input_path = fu.get_valid_path("Enter path to CSV file or folder: ")
+
+    action = choose_action()
+    output_folder = None
+    if action == 2:
+        output_folder = input("Enter path for new output folder: ").strip()
+        os.makedirs(output_folder, exist_ok=True)
+
+    if os.path.isfile(input_path) and input_path.endswith(".csv"):
+        merge_single_file(input_path, output_folder)
+    elif os.path.isdir(input_path):
+        # detect if nested structure
+        subdirs = [os.path.join(input_path, d) for d in os.listdir(input_path)
+                   if os.path.isdir(os.path.join(input_path, d))]
+        if subdirs:
+            process_nested_folder(input_path, output_folder)
+        else:
+            process_flat_folder(input_path, output_folder)
+    else:
+        print("Invalid path. Must be a CSV file or folder.")
 
 
 if __name__ == "__main__":
