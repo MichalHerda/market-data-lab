@@ -1,12 +1,40 @@
 import os
+import re
 import libs.csv_utils as cu
 import libs.file_utils as fu
 
 
+def extract_tf_and_period(column_name: str):
+    """Extract timeframe and period from a column name like SMA_H1_50_H1 or EMA_D1_100"""
+    # Try to find timeframe (H1, M15, D1, W1, MN1, etc.)
+    tf_match = re.search(r'(M\d+|H\d+|D\d+|W\d+|MN\d+)', column_name, re.IGNORECASE)
+    timeframe = tf_match.group(0).upper() if tf_match else None
+
+    # Try to find period (sequence of digits)
+    period_match = re.search(r'_(\d+)_', column_name)
+    if not period_match:
+        period_match = re.search(r'(\d+)$', column_name)
+    period = period_match.group(1) if period_match else None
+
+    return timeframe, period
+
+
+def generate_uptrend_name(column_name: str) -> str:
+    """Generate uptrend column name based on input column naming pattern"""
+    timeframe, period = extract_tf_and_period(column_name)
+    parts = ["up"]
+    if timeframe:
+        parts.append(timeframe)
+    if period:
+        parts.append(period)
+    return "_".join(parts)
+
+
 def calculate_trend(df, column_name):
     """Add Uptrend column based on changes in the chosen column"""
-    df["Uptrend"] = df[column_name].diff() > 0
-    return df
+    new_col_name = generate_uptrend_name(column_name)
+    df[new_col_name] = df[column_name].diff() > 0
+    return df, new_col_name
 
 
 def process_csv(file_path: str, column_name: str, output_folder: str = None):
@@ -22,7 +50,7 @@ def process_csv(file_path: str, column_name: str, output_folder: str = None):
         return
 
     before = len(df)
-    df = calculate_trend(df, column_name)
+    df, new_col_name = calculate_trend(df, column_name)
     after = len(df)
 
     if output_folder:
@@ -34,7 +62,7 @@ def process_csv(file_path: str, column_name: str, output_folder: str = None):
     cu.save_csv(df, save_path, sep=";")
     print(
         f"Processed {os.path.basename(file_path)}: {before} rows → {after} rows. "
-        f"Added Uptrend column. Saved to {save_path}"
+        f"Added column '{new_col_name}'. Saved to {save_path}"
     )
 
 
