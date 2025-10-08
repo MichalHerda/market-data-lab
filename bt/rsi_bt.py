@@ -26,6 +26,8 @@ trades: list[Trade] = []
 in_position = False
 current_sl = 0
 current_tp = 0
+sl_total = 0
+tp_total = 0
 
 
 def is_rsi_entry(rsi_val: float, level: float = RSI_ENTRY_LEVEL) -> bool:
@@ -53,7 +55,7 @@ def is_tp(price: float):
 
 
 def process_row(row: pd.Series) -> None:
-    global in_position, trades, current_sl, current_tp
+    global in_position, trades, current_sl, current_tp, sl_total, tp_total
     price = row["open"]
     if not in_position and is_rsi_entry(row["RSI_14"]):
         trade = Trade(
@@ -74,6 +76,7 @@ def process_row(row: pd.Series) -> None:
             in_position = False
             current_sl = 0
             current_tp = 0
+            sl_total += 1
         elif is_tp(price):
             trades[-1].close_time = row["timestamp"]
             trades[-1].close_price = price
@@ -81,9 +84,11 @@ def process_row(row: pd.Series) -> None:
             in_position = False
             current_sl = 0
             current_tp = 0
+            tp_total += 1
 
 
 def main() -> None:
+    global sl_total, tp_total
     print("opened as main")
     input_path = fu.get_valid_file("enter the path to CSV file: ")
     data = cu.load_csv(input_path)
@@ -95,6 +100,8 @@ def main() -> None:
         print(f"\n Zapisano {len(trades)} sygnałów do pliku: {output_path}")
     else:
         print("\n Nie znaleziono żadnych sygnałów do zapisania.")
+    print("sl total: ", sl_total)
+    print("tp_total: ", tp_total)
 
 
 if __name__ == "__main__":
