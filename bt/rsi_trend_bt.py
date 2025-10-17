@@ -20,7 +20,7 @@ class Trade:
 
 RSI_ENTRY_LEVEL = 35
 SL_PIPS = 100
-TP_PIPS = 100
+TP_PIPS = 1000
 
 
 def is_rsi_entry(rsi_val: float, level: float = RSI_ENTRY_LEVEL) -> bool:

@@ -5,19 +5,6 @@ from datetime import datetime
 from dataclasses import dataclass
 
 
-"""
-@dataclass
-class Candle:
-    time: datetime
-    open_H1: float
-    high_H1: float
-    low_H1: float
-    close_H1: float
-    trend_H1: bool
-    trend_D1: bool
-"""
-
-
 @dataclass
 class Trade:
     open_time: datetime
@@ -59,7 +46,6 @@ def process_row(row: pd.Series) -> None:
 
 
 def main() -> None:
-    print("opened as main")
     input_path = fu.get_valid_file("enter the path to CSV file: ")
     data = cu.load_csv(input_path)
     for index, row in data.iterrows():
