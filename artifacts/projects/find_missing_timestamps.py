@@ -54,6 +54,7 @@ def analyze_file(file_path: str):
         df = cu.load_csv(file_path, sep=";")
     except Exception as e:
         # Could not load — skip
+        print("exception: ", e)
         return None, None
 
     if "timestamp" not in df.columns:

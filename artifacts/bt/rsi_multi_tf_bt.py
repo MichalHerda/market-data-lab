@@ -46,6 +46,21 @@ def select_timeframe(timeframe: str) -> enumerate:
     return selected_tf
 
 
+def process_file(file_path: str) -> None:
+    trades: list[Trade] = []
+    in_position = False
+    current_sl = 0.0
+    current_tp = 0.0
+    sl_total = 0
+    tp_total = 0
+
+    try:
+        df = cu.load_csv(file_path)
+    except Exception as e:
+        print(f"Could not load {file_path}: {e}")
+        return
+
+
 def main() -> None:
     global HIGH_TREND, MEDIUM_TREND, LOW_TREND
     print("Multiframe Uptrend Rsi Tester")
@@ -54,6 +69,7 @@ def main() -> None:
     HIGH_TREND = select_timeframe("HIGH_TREND")
     MEDIUM_TREND = select_timeframe("MEDIUM_TREND")
     LOW_TREND = select_timeframe("LOW_TREND")
+    process_file(input_path)
 
 
 if __name__ == "__main__":

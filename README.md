@@ -14,23 +14,35 @@ Each project is organized into thematic categories for clarity.
 
 ---
 
-## 📂 Repository Structure
+## 🧭 Project Status & Vision
+
+This repository is undergoing an architectural refactor.
+
+The long-term goal is to build a **clean, reusable and extensible data-processing and research pipeline**
+for financial market data, with clear separation between:
+
+- core domain logic (pure, reusable Python code)
+- execution layers (CLI, pipelines, APIs)
+- legacy / exploratory experiments
+
+The current structure reflects both **exploratory research code** and **emerging production-ready components**.
+Legacy scripts are being progressively extracted, refactored or archived.
+
+
+```
+## 📂 Repository Structure 
 
 market-data-lab/
-├── data/ # sample CSV files (small-sized only)
-├── notebooks/ # Jupyter notebooks with analysis
-├── projects/ # categorized subprojects
-│ ├── api/
-│ │ ├── fetch_yfinance/
-│ │ └── fetch_mt4/
-│ ├── backtest/
-│ │ ├── sma_backtest/
-│ │ └── breakout_strategy/
-│ └── csv_edition/
-│ ├── moving_averages/
-│ └── normalize_prices/
-├── requirements.txt
+├── core/           # (in progress) core domain logic, reusable and headless
+├── scripts/        # CLI entry points built on top of core
+├── artifacts/      # legacy and exploratory code kept for reference
+├── data/           # small sample datasets
+├── notebooks/      # exploratory Jupyter notebooks
+├── bt/             # experimental backtesting code 
+├── fastapi/        # API experiments
 └── README.md
+
+```
 
 ---
 

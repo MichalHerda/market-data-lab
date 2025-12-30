@@ -9,7 +9,7 @@ def main():
 
     # Step 1: Load input CSV
     input_path = fu.get_valid_file("Enter path to CSV file: ")
-    df = cu.load_csv(input_path, sep=",")
+    df = cu.load_csv(input_path, sep=";")
 
     # Step 2: Display available columns (one per line)
     print("\nAvailable columns:")
