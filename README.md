@@ -43,6 +43,22 @@ market-data-lab/
 └── README.md
 
 ```
+## Pipeline
+
+```
+[MT4 export]
+   ↓
+[filter symbols]        (optional)
+   ↓
+[data cleaning]         (ENTRY POINT pipeline)
+   ↓
+[merge timeframes]      (HTF → LTF forward-fill)
+   ↓
+[feature engineering]   (RSI, MA, etc. )
+   ↓
+[validation / bt / ML]
+
+```
 
 ---
 
