@@ -3,7 +3,8 @@ from pathlib import Path
 
 from core.selection import filter_symbols
 from core.merge_timeframes import merge_timeframes
-from core.merge_ohlcv import merge_folders  # <-- new import for OHLCV merge
+from core.merge_ohlcv import merge_folders
+from core.validate_structure import validate_csv_structure
 
 
 def main():
@@ -30,9 +31,15 @@ def main():
     # Merge OHLCV command (two folders)
     # -----------------------------
     mo = sub.add_parser("merge-ohlcv")
-    mo.add_argument("input1", type=Path, help="Path to the first folder")
-    mo.add_argument("input2", type=Path, help="Path to the second folder")
-    mo.add_argument("--output", type=Path, required=True, help="Output folder for merged CSVs")
+    mo.add_argument("input1", type=Path)
+    mo.add_argument("input2", type=Path)
+    mo.add_argument("--output", type=Path, required=True)
+
+    # -----------------------------
+    # Validate CSV structure command
+    # -----------------------------
+    vs = sub.add_parser("validate-structure")
+    vs.add_argument("input", type=Path)
 
     args = parser.parse_args()
 
@@ -51,12 +58,38 @@ def main():
         )
 
     elif args.command == "merge-ohlcv":
-        # Merge CSVs from exactly two folders
         merge_folders(
             folder1=args.input1,
             folder2=args.input2,
             output_base=args.output,
         )
+
+    elif args.command == "validate-structure":
+        result = validate_csv_structure(args.input)
+
+        if result["all_same"]:
+            print("All CSV files share the same column structure.")
+        else:
+            print("Column structure mismatch detected.")
+
+        print("\nReference columns:")
+        print(", ".join(result["reference"]))
+
+        if result["differences"]:
+            print("\nFiles with differences:")
+            for path, info in result["differences"].items():
+                print(f"\n{path}")
+                if info["missing"]:
+                    print("  Missing:", ", ".join(sorted(info["missing"])))
+                if info["extra"]:
+                    print("  Extra:", ", ".join(sorted(info["extra"])))
+                if info["order_diff"]:
+                    print("  Same columns, different order")
+
+        if result["load_errors"]:
+            print("\nFiles that could not be loaded:")
+            for path, err in result["load_errors"].items():
+                print(f"{path}: {err}")
 
 
 if __name__ == "__main__":

@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Optional
 import pandas as pd
 
 TIME_COL_CANDIDATES = ("date", "time", "timestamp")
@@ -12,7 +13,7 @@ def detect_time_column(df: pd.DataFrame) -> str:
     raise ValueError("No valid time column found")
 
 
-def extract_symbol_tf(path: Path):
+def extract_symbol_tf(path: Path) -> tuple[str, Optional[str]]:
     parts = path.stem.split("_")
     if len(parts) < 2:
         return path.stem, None
