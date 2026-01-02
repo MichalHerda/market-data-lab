@@ -5,6 +5,8 @@ from core.selection import filter_symbols
 from core.merge_timeframes import merge_timeframes
 from core.merge_ohlcv import merge_folders
 from core.validate_structure import validate_csv_structure
+from core.detect_duplicates import detect_timestamp_duplicates
+from core.apply_duplicate_strategy import apply_duplicate_strategy
 
 
 def main():
@@ -40,6 +42,27 @@ def main():
     # -----------------------------
     vs = sub.add_parser("validate-structure")
     vs.add_argument("input", type=Path)
+
+    # -----------------------------
+    # Detect Duplicates
+    # -----------------------------
+    dd = sub.add_parser("detect-duplicates")
+    dd.add_argument("input", type=Path)
+    dd.add_argument("--no-report", action="store_true")
+    dd.add_argument("--report", type=Path)
+
+    # -----------------------------
+    # Apply Duplicates
+    # -----------------------------
+    ad = sub.add_parser("apply-duplicates")
+    ad.add_argument("input", type=Path)
+    ad.add_argument("--output", type=Path, required=True)
+    ad.add_argument(
+        "--strategy",
+        choices=["keep_first", "keep_last", "use_reference"],
+        required=True,
+    )
+    ad.add_argument("--reference", type=Path)
 
     args = parser.parse_args()
 
@@ -90,6 +113,23 @@ def main():
             print("\nFiles that could not be loaded:")
             for path, err in result["load_errors"].items():
                 print(f"{path}: {err}")
+
+    elif args.command == "detect-duplicates":
+        result = detect_timestamp_duplicates(
+            input_root=args.input,
+            generate_report=not args.no_report,
+            report_path=args.report,
+        )
+
+        print(f"Files with duplicate timestamps: {len(result)}")
+
+    elif args.command == "apply-duplicates":
+        apply_duplicate_strategy(
+            input_root=args.input,
+            output_root=args.output,
+            strategy=args.strategy,
+            reference_root=args.reference,
+        )
 
 
 if __name__ == "__main__":

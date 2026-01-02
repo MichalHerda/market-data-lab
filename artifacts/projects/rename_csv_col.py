@@ -1,7 +1,6 @@
 # projects/rename_csv_columns_recursive.py
 import os
 from typing import List, Dict
-import libs.file_utils as fu
 import libs.csv_utils as cu
 
 
