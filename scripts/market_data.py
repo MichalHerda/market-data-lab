@@ -9,6 +9,7 @@ from core.detect_duplicates import detect_timestamp_duplicates
 from core.resolve_duplicates import resolve_duplicates
 from core.drop_columns import drop_columns
 from core.rename_columns import rename_columns
+from core.slice_time import slice_time
 
 
 def main():
@@ -93,6 +94,15 @@ def main():
     rc.add_argument("--output", type=Path, required=True)
 
     # -----------------------------
+    # Slice time range
+    # -----------------------------
+    st = sub.add_parser("slice-time")
+    st.add_argument("input", type=Path)
+    st.add_argument("--start", type=str, help="Start datetime YYYY-MM-DD [HH[:MM[:SS]]]")
+    st.add_argument("--end", type=str, help="End datetime YYYY-MM-DD [HH[:MM[:SS]]]")
+    st.add_argument("--output", type=Path, required=True)
+
+    # -----------------------------
     args = parser.parse_args()
 
     if args.command == "filter-symbols":
@@ -174,6 +184,13 @@ def main():
             input_root=args.input,
             output_root=args.output,
             rename_map=rename_map
+        )
+    elif args.command == "slice-time":
+        slice_time(
+            input_root=args.input,
+            output_root=args.output,
+            start=args.start,
+            end=args.end,
         )
 
 

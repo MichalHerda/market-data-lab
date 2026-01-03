@@ -49,7 +49,11 @@ market-data-lab/
 ```
 [MT4 export]
    ↓
-[filter symbols]          (optional)
+[filter symbols]            (optional)
+   ↓
+[merge timeframes]
+   ↓
+[slice time range]          (backtest window)
    ↓
 [validate structure]
    ↓
@@ -57,9 +61,7 @@ market-data-lab/
    ↓
 [resolve duplicates]
    ↓
-[merge timeframes]
-   ↓
-[drop columns]            (optional, strategy-specific)
+[drop columns]              (optional, strategy-specific)
    ↓
 [rename columns]            (optional)
    ↓
@@ -178,28 +180,6 @@ delete → remove listed symbols
 Output directory. Original data is never modified.
 ```
 
-## validate-structure
-
-Purpose:
-Validate CSV column consistency across the entire dataset.
-
-The command checks:
-
-missing or extra columns
-
-inconsistent column order
-
-unreadable CSV files
-
-This step is recommended before merging or feature engineering.
-
-Arguments:
-
-```bash
-input (Path, required)
-Root directory containing CSV files.
-```
-
 ## merge-timeframes
 
 Purpose:
@@ -220,6 +200,65 @@ Root directory containing CSV files.
 
 --output (Path, optional)
 Output directory. If omitted, merged files are written next to input.
+```
+## slice-time
+
+Purpose:
+Restrict datasets to a specific datetime range for backtesting and research.
+
+This step defines the backtest window and should be applied after data
+normalization (duplicate resolution, timeframe merge).
+
+The operation is non-destructive — filtered files are written to a new output directory.
+
+Arguments:
+
+```bash
+input (Path, required)
+Root directory containing CSV files.
+
+--start (str, optional)
+Start datetime: YYYY-MM-DD [HH[:MM[:SS]]]
+
+--end (str, optional)
+End datetime: YYYY-MM-DD [HH[:MM[:SS]]]
+
+--output (Path, required)
+Output directory for sliced data.
+
+```
+
+Example:
+
+```bash
+python -m scripts.market_data slice-time \
+    /home/mh/Desktop/_merged_tf \
+    --start 2025-01-01 \
+    --end 2025-12-31 \
+    --output /home/mh/Desktop/_merged_tf_2025
+
+```
+
+## validate-structure
+
+Purpose:
+Validate CSV column consistency across the entire dataset.
+
+The command checks:
+
+missing or extra columns
+
+inconsistent column order
+
+unreadable CSV files
+
+This step is recommended before merging or feature engineering.
+
+Arguments:
+
+```bash
+input (Path, required)
+Root directory containing CSV files.
 ```
 
 ## detect-duplicates
