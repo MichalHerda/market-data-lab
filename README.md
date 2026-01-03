@@ -29,9 +29,10 @@ The current structure reflects both **exploratory research code** and **emerging
 Legacy scripts are being progressively extracted, refactored or archived.
 
 
-```
+
 ## 📂 Repository Structure 
 
+```
 market-data-lab/
 ├── core/           # (in progress) core domain logic, reusable and headless
 ├── scripts/        # CLI entry points built on top of core
@@ -41,8 +42,8 @@ market-data-lab/
 ├── bt/             # experimental backtesting code 
 ├── fastapi/        # API experiments
 └── README.md
-
 ```
+
 ## Pipeline
 
 ```
@@ -76,14 +77,21 @@ Clone the repository and set up a virtual environment:
 ```bash
 git clone https://github.com/MichalHerda/market-data-lab.git
 cd market-data-lab
+```
 
 # create and activate virtual environment
+
+```
 python -m venv .venv
 source .venv/bin/activate   # Linux/Mac
 .venv\Scripts\Activate      # Windows
+```
 
 # install dependencies
+
+```
 pip install -r requirements.txt
+```
 
 ---
 
@@ -124,7 +132,7 @@ patching missing ranges
 
 Files are merged on the time column with forward-fill.
 
-# Argumets:
+Argumets:
 
 ```bash
 input1 (Path, required)
