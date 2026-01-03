@@ -8,6 +8,7 @@ from core.validate_structure import validate_csv_structure
 from core.detect_duplicates import detect_timestamp_duplicates
 from core.resolve_duplicates import resolve_duplicates
 from core.drop_columns import drop_columns
+from core.rename_columns import rename_columns
 
 
 def main():
@@ -64,6 +65,7 @@ def main():
         required=True,
     )
     ad.add_argument("--reference", type=Path)
+
     # -----------------------------
     # Drop columns
     # -----------------------------
@@ -77,6 +79,20 @@ def main():
     )
     dc.add_argument("--output", type=Path, required=True)
 
+    # -----------------------------
+    # Rename columns
+    # -----------------------------
+    rc = sub.add_parser("rename-columns")
+    rc.add_argument("input", type=Path)
+    rc.add_argument(
+        "--rename",
+        nargs="+",
+        required=True,
+        help="List of old_name new_name pairs, e.g. open_M15 O_M15 high_M15 H_M15 ..."
+    )
+    rc.add_argument("--output", type=Path, required=True)
+
+    # -----------------------------
     args = parser.parse_args()
 
     if args.command == "filter-symbols":
@@ -148,6 +164,16 @@ def main():
             input_root=args.input,
             output_root=args.output,
             columns=args.columns,
+        )
+    elif args.command == "rename-columns":
+        pairs = args.rename
+        if len(pairs) % 2 != 0:
+            raise ValueError("Rename list must contain an even number of arguments: old1 new1 old2 new2 ...")
+        rename_map = {pairs[i]: pairs[i+1] for i in range(0, len(pairs), 2)}
+        rename_columns(
+            input_root=args.input,
+            output_root=args.output,
+            rename_map=rename_map
         )
 
 

@@ -61,6 +61,8 @@ market-data-lab/
    ↓
 [drop columns]            (optional, strategy-specific)
    ↓
+[rename columns]            (optional)
+   ↓
 [feature engineering]
 
 ```
@@ -304,5 +306,42 @@ python -m scripts.market_data drop-columns \
         open_M1 high_M1 low_M1 close_M1 volume_M1 \
         open_M5 high_M5 low_M5 close_M5 volume_M5 \
     --output /home/mh/Desktop/_merged_tf_deleted_M1_M5
+
+```
+
+## rename-columns
+
+Purpose:
+Rename specified columns across all CSV files in a dataset.
+This is typically used after merging timeframes, standardizing names for strategy logic or feature engineering.
+
+The operation is non-destructive — renamed files are written to a new output directory.
+
+Arguments:
+
+```bash
+input (Path, required)
+Root directory containing CSV files.
+
+--rename (list[str], required)
+Pairs of old_name new_name, e.g.:
+
+open_M15 O_M15 high_M15 H_M15 low_M15 L_M15 close_M15 C_M15 volume_M15 V_M15 \
+open_M30 O_M30 high_M30 H_M30 low_M30 L_M30 close_M30 C_M30 volume_M30 V_M30
+
+--output (Path, required)
+Output directory for renamed files.
+
+```
+
+Example:
+
+```bash
+python -m scripts.market_data rename-columns \
+    /home/mh/Desktop/_merged_output \
+    --rename \
+        open_M15 O_M15 high_M15 H_M15 low_M15 L_M15 close_M15 C_M15 volume_M15 V_M15 \
+        open_M30 O_M30 high_M30 H_M30 low_M30 L_M30 close_M30 C_M30 volume_M30 V_M30 \
+    --output /home/mh/Desktop/renamed
 
 ```
