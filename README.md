@@ -49,15 +49,19 @@ market-data-lab/
 ```
 [MT4 export]
    ↓
-[filter symbols]        (optional)
+[filter symbols]          (optional)
    ↓
-[data cleaning]         (ENTRY POINT pipeline)
+[validate structure]
    ↓
-[merge timeframes]      (HTF → LTF forward-fill)
+[detect duplicates]
    ↓
-[feature engineering]   (RSI, MA, etc. )
+[resolve duplicates]
    ↓
-[validation / bt / ML]
+[merge timeframes]
+   ↓
+[drop columns]            (optional, strategy-specific)
+   ↓
+[feature engineering]
 
 ```
 
@@ -153,7 +157,7 @@ Select or exclude specific market symbols (directory-level filtering).
 This is typically used when working with large MT4/MT5 exports containing
 many instruments, but only a subset is required for further processing.
 
-# Arguments:
+Arguments:
 
 ```bash
 input (Path, required)
@@ -237,7 +241,7 @@ Disable report generation.
 Custom path for the CSV report file.
 ```
 
-## apply-duplicates
+## resolve-duplicates
 
 Purpose:
 Resolve duplicate timestamps using a defined strategy.
@@ -264,4 +268,41 @@ use_reference
 
 --reference (Path, optional)
 Required only when using use_reference strategy.
+```
+
+## drop-columns
+
+Purpose:
+Remove selected columns from all CSV files in the dataset.
+
+This command is typically used after timeframe merging, when
+lower-timeframe candles or noisy features (e.g. M1, M5) are no longer
+required for strategy logic.
+
+The operation is non-destructive — cleaned files are written to a new
+output directory.
+
+Arguments:
+
+```bash
+input (Path, required)
+Root directory containing CSV files.
+
+--columns (list[str], required)
+Names of columns to remove.
+
+--output (Path, required)
+Output directory for cleaned data.
+
+```
+
+Example:
+```bash
+python -m scripts.market_data drop-columns \
+    /home/mh/Desktop/_merged_tf \
+    --columns \
+        open_M1 high_M1 low_M1 close_M1 volume_M1 \
+        open_M5 high_M5 low_M5 close_M5 volume_M5 \
+    --output /home/mh/Desktop/_merged_tf_deleted_M1_M5
+
 ```

@@ -2,7 +2,7 @@ from pathlib import Path
 import pandas as pd
 
 
-def apply_duplicate_strategy(
+def resolve_duplicates(
     input_root: Path,
     output_root: Path,
     *,
@@ -11,7 +11,7 @@ def apply_duplicate_strategy(
     timestamp_col: str = "timestamp",
 ):
     """
-    Apply a duplicate resolution strategy to CSV files.
+    Apply a duplicates resolution strategy to CSV files.
     """
     if strategy == "use_reference" and reference_root is None:
         raise ValueError("reference_root is required for use_reference strategy")

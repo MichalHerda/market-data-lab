@@ -6,7 +6,8 @@ from core.merge_timeframes import merge_timeframes
 from core.merge_ohlcv import merge_folders
 from core.validate_structure import validate_csv_structure
 from core.detect_duplicates import detect_timestamp_duplicates
-from core.apply_duplicate_strategy import apply_duplicate_strategy
+from core.resolve_duplicates import resolve_duplicates
+from core.drop_columns import drop_columns
 
 
 def main():
@@ -54,7 +55,7 @@ def main():
     # -----------------------------
     # Apply Duplicates
     # -----------------------------
-    ad = sub.add_parser("apply-duplicates")
+    ad = sub.add_parser("resolve-duplicates")
     ad.add_argument("input", type=Path)
     ad.add_argument("--output", type=Path, required=True)
     ad.add_argument(
@@ -63,6 +64,18 @@ def main():
         required=True,
     )
     ad.add_argument("--reference", type=Path)
+    # -----------------------------
+    # Drop columns
+    # -----------------------------
+    dc = sub.add_parser("drop-columns")
+    dc.add_argument("input", type=Path)
+    dc.add_argument(
+        "--columns",
+        nargs="+",
+        required=True,
+        help="Column names to remove",
+    )
+    dc.add_argument("--output", type=Path, required=True)
 
     args = parser.parse_args()
 
@@ -123,12 +136,18 @@ def main():
 
         print(f"Files with duplicate timestamps: {len(result)}")
 
-    elif args.command == "apply-duplicates":
-        apply_duplicate_strategy(
+    elif args.command == "resolve-duplicates":
+        resolve_duplicates(
             input_root=args.input,
             output_root=args.output,
             strategy=args.strategy,
             reference_root=args.reference,
+        )
+    elif args.command == "drop-columns":
+        drop_columns(
+            input_root=args.input,
+            output_root=args.output,
+            columns=args.columns,
         )
 
 
