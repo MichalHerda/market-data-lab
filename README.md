@@ -53,6 +53,8 @@ market-data-lab/
    ↓
 [merge timeframes]
    ↓
+[drop incomplete rows]      (multiframe integrity)
+   ↓
 [slice time range]          (backtest window)
    ↓
 [validate structure]
@@ -201,6 +203,41 @@ Root directory containing CSV files.
 --output (Path, optional)
 Output directory. If omitted, merged files are written next to input.
 ```
+
+## drop-incomplete-rows
+
+## drop-incomplete-rows
+
+Purpose:
+Remove rows with missing values (NaNs) from all CSV files.
+
+This step is essential for **multi-timeframe strategies**, where
+each row must contain a complete set of features across all timeframes.
+
+It is typically applied after timeframe merging and before
+backtest window slicing.
+
+The operation is non-destructive — cleaned files are written to a new
+output directory.
+
+Arguments:
+
+```bash
+input (Path, required)
+Root directory containing CSV files.
+
+--output (Path, required)
+Output directory for cleaned data.
+```
+
+Example:
+```bash
+python3 -m scripts.market_data drop-incomplete-rows \
+    /home/mh/Desktop/_merged_tf \
+    --output /home/mh/Desktop/_merged_tf_complete
+
+```
+
 ## slice-time
 
 Purpose:
@@ -231,7 +268,7 @@ Output directory for sliced data.
 Example:
 
 ```bash
-python -m scripts.market_data slice-time \
+python3 -m scripts.market_data slice-time \
     /home/mh/Desktop/_merged_tf \
     --start 2025-01-01 \
     --end 2025-12-31 \

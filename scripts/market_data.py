@@ -10,6 +10,7 @@ from core.resolve_duplicates import resolve_duplicates
 from core.drop_columns import drop_columns
 from core.rename_columns import rename_columns
 from core.slice_time import slice_time
+from core.drop_incomplete_rows import drop_incomplete_rows
 
 
 def main():
@@ -103,6 +104,13 @@ def main():
     st.add_argument("--output", type=Path, required=True)
 
     # -----------------------------
+    # Drop incomplete rows
+    # -----------------------------
+    dr = sub.add_parser("drop-incomplete-rows")
+    dr.add_argument("input", type=Path)
+    dr.add_argument("--output", type=Path, required=True)
+
+    # -----------------------------
     args = parser.parse_args()
 
     if args.command == "filter-symbols":
@@ -191,6 +199,11 @@ def main():
             output_root=args.output,
             start=args.start,
             end=args.end,
+        )
+    elif args.command == "drop-incomplete-rows":
+        drop_incomplete_rows(
+            input_root=args.input,
+            output_root=args.output,
         )
 
 
