@@ -124,7 +124,7 @@ All commands operate on directory-based datasets containing CSV files
 ### General Usage
 
 ```bash
-python -m scripts.market_data <command> [arguments]
+python3 -m scripts.market_data <command> [arguments]
 ```
 
 Commands:
@@ -210,8 +210,9 @@ Output directory for filtered dataset.
 ```
 
 Example:
+
 ```bash
-python -m scripts.market_data drop-timeframes \
+python3 -m scripts.market_data drop-timeframes \
     /home/mh/Desktop/_merged_output \
     --timeframes M1 M5 W1 MN1 \
     --output /home/mh/Desktop/_merged_output_filtered
@@ -242,8 +243,6 @@ Output directory. If omitted, merged files are written next to input.
 
 ## drop-incomplete-rows
 
-## drop-incomplete-rows
-
 Purpose:
 Remove rows with missing values (NaNs) from all CSV files.
 
@@ -267,6 +266,7 @@ Output directory for cleaned data.
 ```
 
 Example:
+
 ```bash
 python3 -m scripts.market_data drop-incomplete-rows \
     /home/mh/Desktop/_merged_tf \
@@ -411,8 +411,9 @@ Output directory for cleaned data.
 ```
 
 Example:
+
 ```bash
-python -m scripts.market_data drop-columns \
+python3 -m scripts.market_data drop-columns \
     /home/mh/Desktop/_merged_tf \
     --columns \
         open_M1 high_M1 low_M1 close_M1 volume_M1 \
@@ -449,7 +450,7 @@ Output directory for renamed files.
 Example:
 
 ```bash
-python -m scripts.market_data rename-columns \
+python3 -m scripts.market_data rename-columns \
     /home/mh/Desktop/_merged_output \
     --rename \
         open_M15 O_M15 high_M15 H_M15 low_M15 L_M15 close_M15 C_M15 volume_M15 V_M15 \
