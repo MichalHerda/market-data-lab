@@ -12,6 +12,7 @@ from core.rename_columns import rename_columns
 from core.slice_time import slice_time
 from core.drop_incomplete_rows import drop_incomplete_rows
 from core.drop_timeframes import drop_timeframes
+from core.detect_gaps import detect_time_gaps
 
 
 def main():
@@ -125,6 +126,13 @@ def main():
     dr.add_argument("--output", type=Path, required=True)
 
     # -----------------------------
+    # Detect time gaps
+    # -----------------------------
+    dg = sub.add_parser("detect-gaps")
+    dg.add_argument("input", type=Path)
+    dg.add_argument("--output", type=Path, required=True)
+
+    # -----------------------------
     args = parser.parse_args()
 
     if args.command == "filter-symbols":
@@ -223,6 +231,11 @@ def main():
         )
     elif args.command == "drop-incomplete-rows":
         drop_incomplete_rows(
+            input_root=args.input,
+            output_root=args.output,
+        )
+    elif args.command == "detect-gaps":
+        detect_time_gaps(
             input_root=args.input,
             output_root=args.output,
         )

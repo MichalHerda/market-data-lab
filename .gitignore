@@ -6,3 +6,4 @@ __pycache__/
 data
 merged_output
 missing_timestamps
+gap_reports

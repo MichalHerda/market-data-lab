@@ -69,6 +69,8 @@ market-data-lab/
    ↓
 [rename columns]            (optional)
    ↓
+[detect gaps]   ← FINAL DATA QUALITY GATE
+   ↓
 [feature engineering]
 
 ```
@@ -265,7 +267,7 @@ Root directory containing CSV files.
 Output directory for cleaned data.
 ```
 
-Example:
+Example: 
 
 ```bash
 python3 -m scripts.market_data drop-incomplete-rows \
@@ -456,5 +458,45 @@ python3 -m scripts.market_data rename-columns \
         open_M15 O_M15 high_M15 H_M15 low_M15 L_M15 close_M15 C_M15 volume_M15 V_M15 \
         open_M30 O_M30 high_M30 H_M30 low_M30 L_M30 close_M30 C_M30 volume_M30 V_M30 \
     --output /home/mh/Desktop/renamed
+
+```
+
+## detect-gaps
+
+Purpose:
+Detect time discontinuities (gaps) in OHLCV data based on the timestamp column
+and the expected interval implied by the timeframe.
+
+This step acts as a final data quality gate before feature engineering
+and backtesting.
+
+A gap is detected when the difference between two consecutive timestamps
+is greater than the expected timeframe delta, for example:
+
+H1 data: 04:00 → 06:00 → gap detected
+
+M15 data: 10:15 → 10:45 → gap detected
+
+The command does not modify input data.
+Instead, it generates diagnostic gap reports for each instrument
+and each timeframe.
+
+Arguments:
+
+```bash
+input (Path, required)
+Root directory containing symbol subdirectories with CSV files.
+
+--output (Path, required)
+Output directory for gap report files.
+
+```
+
+Example:
+
+```bash
+python3 -m scripts.market_data detect-gaps \
+    /home/mh/market-data-lab/merged_output \
+    --output /home/mh/market-data-lab/gap_reports
 
 ```
