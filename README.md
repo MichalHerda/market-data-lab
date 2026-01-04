@@ -51,6 +51,8 @@ market-data-lab/
    ↓
 [filter symbols]            (optional)
    ↓
+[drop timeframes]           (optional, performance)
+   ↓
 [merge timeframes]
    ↓
 [drop incomplete rows]      (multiframe integrity)
@@ -180,6 +182,40 @@ delete → remove listed symbols
 
 --output (Path, required)
 Output directory. Original data is never modified.
+```
+
+## drop-timeframes
+
+Purpose:
+Remove entire timeframe files before merging, reducing memory usage,
+I/O overhead and merge complexity.
+
+This step is typically used after symbol selection when certain timeframes
+(e.g. M1/M5 noise or W1/MN1 overly coarse data) are not required for a strategy.
+
+Detection is filename-based and non-destructive.
+
+Arguments:
+
+```bash
+input (Path, required)
+Root directory containing symbol subdirectories.
+
+--timeframes (list[str], required)
+Timeframe identifiers to remove (matched as substrings),
+e.g. M1 M5 W1 MN1
+
+--output (Path, required)
+Output directory for filtered dataset.
+```
+
+Example:
+```bash
+python -m scripts.market_data drop-timeframes \
+    /home/mh/Desktop/_merged_output \
+    --timeframes M1 M5 W1 MN1 \
+    --output /home/mh/Desktop/_merged_output_filtered
+
 ```
 
 ## merge-timeframes

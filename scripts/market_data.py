@@ -11,6 +11,7 @@ from core.drop_columns import drop_columns
 from core.rename_columns import rename_columns
 from core.slice_time import slice_time
 from core.drop_incomplete_rows import drop_incomplete_rows
+from core.drop_timeframes import drop_timeframes
 
 
 def main():
@@ -25,6 +26,19 @@ def main():
     fs.add_argument("--symbols", nargs="+", required=True)
     fs.add_argument("--mode", choices=["keep", "delete"], required=True)
     fs.add_argument("--output", type=Path, required=True)
+
+    # -----------------------------
+    # Drop timeframes
+    # -----------------------------
+    dt = sub.add_parser("drop-timeframes")
+    dt.add_argument("input", type=Path)
+    dt.add_argument(
+        "--timeframes",
+        nargs="+",
+        required=True,
+        help="List of timeframe substrings to remove, e.g. M1 M5 W1 MN1",
+    )
+    dt.add_argument("--output", type=Path, required=True)
 
     # -----------------------------
     # Merge timeframes command
@@ -119,6 +133,13 @@ def main():
             output_root=args.output,
             symbols=set(args.symbols),
             mode=args.mode,
+        )
+
+    elif args.command == "drop-timeframes":
+        drop_timeframes(
+            input_root=args.input,
+            output_root=args.output,
+            timeframes=args.timeframes,
         )
 
     elif args.command == "merge-timeframes":
