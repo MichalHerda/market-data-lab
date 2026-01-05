@@ -28,19 +28,24 @@ for financial market data, with clear separation between:
 The current structure reflects both **exploratory research code** and **emerging production-ready components**.
 Legacy scripts are being progressively extracted, refactored or archived.
 
+Data cleaning and data validation are treated as a fully
+separate and deterministic subsystem, independent from backtesting logic.
+
 
 
 ## 📂 Repository Structure 
 
 ```
 market-data-lab/
-├── core/           # (in progress) core domain logic, reusable and headless
-├── scripts/        # CLI entry points built on top of core
-├── artifacts/      # legacy and exploratory code kept for reference
-├── data/           # small sample datasets
-├── notebooks/      # exploratory Jupyter notebooks
-├── bt/             # experimental backtesting code 
-├── fastapi/        # API experiments
+├── core/                     # core domain logic, reusable and headless
+      ├── clean/              # data cleaning and preprocessing
+      └── backtest/           # (in progress) backtests module
+├── scripts/                  # CLI entry points built on top of core
+├── artifacts/                # legacy and exploratory code kept for reference
+├── data/                     # small sample datasets
+├── notebooks/                # exploratory Jupyter notebooks
+├── bt/                       # experimental backtesting code 
+├── fastapi/                  # API experiments
 └── README.md
 ```
 
@@ -112,7 +117,10 @@ pip install -r requirements.txt
 ## 🛠 DATA PROCESSING CLI
 
 The `scripts/market_data.py` module provides a unified command-line interface
-for **data preprocessing, validation and normalization**.
+for the **data cleaning and validation** subsystem.
+
+Backtesting and strategy research are handled by a separate subsystem
+and are intentionally not exposed through this CLI.
 
 Each command is a thin execution layer built on top of reusable, headless
 functions from the `core/` package.  
@@ -500,3 +508,9 @@ python3 -m scripts.market_data detect-gaps \
     --output /home/mh/market-data-lab/gap_reports
 
 ```
+
+## Backtesting (Planned)
+
+A separate backtesting and simulation engine is under development in `core/backtest/`.
+It will operate exclusively on fully cleaned and validated OHLCV datasets
+produced by the data processing pipeline.

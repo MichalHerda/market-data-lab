@@ -1,22 +1,22 @@
 import argparse
 from pathlib import Path
 
-from core.selection import filter_symbols
-from core.merge_timeframes import merge_timeframes
-from core.merge_ohlcv import merge_folders
-from core.validate_structure import validate_csv_structure
-from core.detect_duplicates import detect_timestamp_duplicates
-from core.resolve_duplicates import resolve_duplicates
-from core.drop_columns import drop_columns
-from core.rename_columns import rename_columns
-from core.slice_time import slice_time
-from core.drop_incomplete_rows import drop_incomplete_rows
-from core.drop_timeframes import drop_timeframes
-from core.detect_gaps import detect_time_gaps
+from core.clean.selection import filter_symbols
+from core.clean.merge_timeframes import merge_timeframes
+from core.clean.merge_ohlcv import merge_folders
+from core.clean.validate_structure import validate_csv_structure
+from core.clean.detect_duplicates import detect_timestamp_duplicates
+from core.clean.resolve_duplicates import resolve_duplicates
+from core.clean.drop_columns import drop_columns
+from core.clean.rename_columns import rename_columns
+from core.clean.slice_time import slice_time
+from core.clean.drop_incomplete_rows import drop_incomplete_rows
+from core.clean.drop_timeframes import drop_timeframes
+from core.clean.detect_gaps import detect_time_gaps
 
 
 def main():
-    parser = argparse.ArgumentParser("market_data")
+    parser = argparse.ArgumentParser("market_data clean")
     sub = parser.add_subparsers(dest="command", required=True)
 
     # -----------------------------
