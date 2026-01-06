@@ -1,30 +1,32 @@
-def run_backtest(data, strategy, params):
+# core/backtest/engine.py
+
+def run_backtest(bars_stream, strategy, params):
     position = None
     trades = []
 
-    for i, row in data.iterrows():
+    for item in bars_stream:
         state = {
-            "price": row["close"],
-            "index": i,
+            "time": item["time"],
+            "index": item["index"],
+            "bars": item["bars"],
             "position": position,
         }
 
         action = strategy(state, params)
 
-        if action == "BUY" and position is None:
+        if action == "OPEN" and position is None:
             position = {
-                "entry_price": row["close"],
-                "entry_index": i,
+                "entry_price": state["bars"]["M15"]["close"],      # TODO (this is temporary)
+                "entry_index": state["index"],
             }
 
-        elif action == "SELL" and position is not None:
-            trade = {
+        elif action == "CLOSE" and position is not None:
+            trades.append({
                 "entry_price": position["entry_price"],
-                "exit_price": row["close"],
+                "exit_price": state["bars"]["M15"]["close"],
                 "entry_index": position["entry_index"],
-                "exit_index": i,
-            }
-            trades.append(trade)
+                "exit_index": state["index"],
+            })
             position = None
 
     return trades

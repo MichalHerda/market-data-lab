@@ -1,8 +1,8 @@
 def buy_and_hold(state, params):
     if state["index"] == 0:
-        return "BUY"
+        return "OPEN"
     if state["index"] == params["last_index"]:
-        return "SELL"
+        return "CLOSE"
     return "HOLD"
 
 
