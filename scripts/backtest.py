@@ -31,10 +31,14 @@ def main():
     strategy_fn = STRATEGIES[args.strategy]
 
     # 5️⃣ run engine
+    params = {
+        "last_index": len(df) - 1
+    }
+
     trades = run_backtest(
         bars_stream=bars_stream,
         strategy=strategy_fn,
-        params={},
+        params=params,
     )
 
     print(trades)

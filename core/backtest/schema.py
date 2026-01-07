@@ -7,7 +7,7 @@ from typing import Dict, Iterable
 
 
 # ============================================================
-# Canonical field names (we operate ONLY on these internally)
+# Canonical field names (engine & strategies operate on THESE)
 # ============================================================
 
 CANONICAL_FIELDS = ("open", "high", "low", "close", "volume")
@@ -42,10 +42,17 @@ class MarketSchema:
     """
     Maps a flat CSV row into a multi-timeframe OHLCV structure.
 
-    Example:
+    Examples:
+
+    Multi-TF:
         fields = {
             "M15": {"open": "open_M15", "close": "close_M15"},
             "H1":  {"open": "open_H1",  "close": "close_H1"},
+        }
+
+    Single-TF (implicit):
+        fields = {
+            "BASE": {"open": "open", "close": "close"}
         }
     """
 
@@ -62,13 +69,17 @@ def infer_schema(columns: Iterable[str]) -> MarketSchema:
     """
     Infer MarketSchema from CSV headers.
 
-    This function is intentionally defensive:
-    - forces all column names to strings
-    - ignores unknown columns
-    - does NOT assume any fixed set of timeframes
+    Design goals:
+    - supports BOTH multi-timeframe and single-timeframe CSVs
+    - case-insensitive
+    - no hard-coded timeframe list
+    - ignores unknown / extra columns
     """
 
-    # ---- force string column names (IMPORTANT)
+    # --------------------------------------------------------
+    # Normalize column names to strings
+    # --------------------------------------------------------
+
     columns = [str(c) for c in columns]
 
     # --------------------------------------------------------
@@ -90,7 +101,7 @@ def infer_schema(columns: Iterable[str]) -> MarketSchema:
         )
 
     # --------------------------------------------------------
-    # Detect OHLCV columns per timeframe
+    # Detect multi-timeframe OHLCV columns (suffix-based)
     # --------------------------------------------------------
 
     tf_map: Dict[str, Dict[str, str]] = defaultdict(dict)
@@ -99,7 +110,6 @@ def infer_schema(columns: Iterable[str]) -> MarketSchema:
         if col == time_column:
             continue
 
-        # expected pattern: <field>_<TF>
         parts = col.split("_")
         if len(parts) < 2:
             continue
@@ -115,9 +125,34 @@ def infer_schema(columns: Iterable[str]) -> MarketSchema:
                 tf_map[tf_raw][canonical] = col
                 break
 
+    # --------------------------------------------------------
+    # Fallback: SINGLE-TIMEFRAME (no suffixes)
+    # --------------------------------------------------------
+
+    if not tf_map:
+        base_fields: Dict[str, str] = {}
+
+        for col in columns:
+            if col == time_column:
+                continue
+
+            col_l = col.lower()
+            for canonical, candidates in FIELD_CANDIDATES.items():
+                if col_l in candidates:
+                    base_fields[canonical] = col
+                    break
+
+        if base_fields:
+            tf_map["BASE"] = base_fields
+
+    # --------------------------------------------------------
+    # Final validation
+    # --------------------------------------------------------
+
     if not tf_map:
         raise ValueError(
-            "infer_schema: no OHLCV timeframe columns detected"
+            "infer_schema: no OHLCV columns detected "
+            "(neither multi-timeframe nor single-timeframe)"
         )
 
     return MarketSchema(

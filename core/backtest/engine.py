@@ -14,18 +14,24 @@ def run_backtest(bars_stream, strategy, params):
 
         action = strategy(state, params)
 
+        # select TF - first available is default
+        tf = next(iter(state["bars"]))
+        close_price = state["bars"][tf]["close"]
+
         if action == "OPEN" and position is None:
             position = {
-                "entry_price": state["bars"]["M15"]["close"],      # TODO (this is temporary)
+                "entry_price": close_price,
                 "entry_index": state["index"],
+                "timeframe": tf,
             }
 
         elif action == "CLOSE" and position is not None:
             trades.append({
                 "entry_price": position["entry_price"],
-                "exit_price": state["bars"]["M15"]["close"],
+                "exit_price": close_price,
                 "entry_index": position["entry_index"],
                 "exit_index": state["index"],
+                "timeframe": position["timeframe"],
             })
             position = None
 
