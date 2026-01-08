@@ -98,7 +98,7 @@ git clone https://github.com/MichalHerda/market-data-lab.git
 cd market-data-lab
 ```
 
-# create and activate virtual environment
+### create and activate virtual environment
 
 ```
 python -m venv .venv
@@ -106,7 +106,7 @@ source .venv/bin/activate   # Linux/Mac
 .venv\Scripts\Activate      # Windows
 ```
 
-# install dependencies
+### install dependencies
 
 ```
 pip install -r requirements.txt
@@ -509,8 +509,166 @@ python3 -m scripts.market_data detect-gaps \
 
 ```
 
-## Backtesting (Planned)
+## Backtesting Module (core/backtest)
 
-A separate backtesting and simulation engine is under development in `core/backtest/`.
-It will operate exclusively on fully cleaned and validated OHLCV datasets
-produced by the data processing pipeline.
+The core/backtest package provides a minimal, data-driven backtesting engine
+designed for systematic strategy research on fully cleaned OHLCV datasets.
+
+The module is intentionally headless and framework-agnostic:
+it contains no I/O logic, no CLI parsing and no persistence.
+All execution and orchestration is handled externally.
+
+The design favors clarity and extensibility over performance at this stage.
+
+### Architectural Overview
+
+The backtesting subsystem is split into four explicit layers:
+
+```bash
+CSV data
+  ↓
+Schema inference        (structure detection)
+  ↓
+Data adapters           (row → market snapshot)
+  ↓
+Backtest engine         (state machine)
+  ↓
+Strategy logic          (pure decision functions)
+
+```
+
+### Schema Inference (schema.py)
+
+The schema layer detects how a flat CSV file maps to market data.
+
+Supported input formats:
+
+1. Single-timeframe datasets
+
+```
+timestamp, open, high, low, close, volume
+```
+
+2. Multi-timeframe merged datasets
+
+```
+open_M15, high_M15, ..., close_H1, volume_H1, ...
+```
+
+Key properties:
+
+- case-insensitive column matching
+
+- no hard-coded timeframe list
+
+- automatic fallback to a single implicit timeframe (BASE)
+
+- ignores unknown or extra columns
+
+- The output is a MarketSchema object describing:
+
+   .the time column
+
+   .available timeframes
+
+   .OHLCV column mappings per timeframe
+
+This allows the rest of the system to operate on canonical field names only
+(open, high, low, close, volume).
+
+### Data Adapters (adapters.py)
+
+Adapters transform raw tabular data into a stream of market snapshots.
+
+Each snapshot contains:
+
+- timestamp
+
+- row index
+
+- OHLCV bars grouped by timeframe
+
+The adapter layer isolates Pandas-specific logic
+and exposes a simple Python iterator to the engine.
+
+### Backtest Engine (engine.py)
+
+The engine implements a deterministic state machine:
+
+- iterates over market snapshots
+
+- maintains current position state
+
+- delegates all decisions to a strategy function
+
+- records completed trades
+
+The engine is deliberately simple:
+
+- no indicators
+
+- no capital management
+
+- no order book simulation
+
+- no assumptions about strategy type
+
+It reacts only to three actions returned by a strategy:
+
+```
+OPEN
+
+CLOSE
+
+HOLD
+```
+
+The engine operates on canonical OHLCV fields
+and does not assume any specific timeframe.
+
+### Strategies (strategies.py)
+
+Strategies are pure functions with the signature:
+
+```
+def strategy(state: dict, params: dict) -> str
+```
+
+They receive:
+
+- current market state
+
+- current position (if any)
+
+- externally supplied parameters
+
+They return a single action:
+
+```
+OPEN, CLOSE or HOLD
+```
+
+This design allows strategies to be:
+
+- unit-testable
+
+- stateless
+
+- reusable across different runners and datasets
+
+### Execution Layer
+
+The CLI runner (scripts/backtest.py) is a thin orchestration layer that:
+
+- loads CSV data
+
+- infers schema
+
+- builds a bars stream
+
+- assembles strategy parameters
+
+- executes the engine
+
+The runner is intentionally simple and expected to evolve.
+Its role is to bridge research workflows with reusable core logic.
