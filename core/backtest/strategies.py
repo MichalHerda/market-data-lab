@@ -1,3 +1,6 @@
+import core.indicators as indicators                # noqa
+
+
 def buy_and_hold(state, params):
     if state["index"] == 0:
         return "OPEN"
