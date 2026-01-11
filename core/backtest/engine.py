@@ -4,7 +4,32 @@ def run_backtest(bars_stream, strategy, params):
     position = None
     trades = []
 
+    # -----------------------------------------
+    # INIT HISTORY STORAGE
+    # -----------------------------------------
+    history = {}
+
     for item in bars_stream:
+        # -----------------------------------------
+        # Update history with current bar
+        # -----------------------------------------
+        for tf, bar in item["bars"].items():
+            if tf not in history:
+                history[tf] = {
+                    "open": [],
+                    "high": [],
+                    "low": [],
+                    "close": [],
+                    "volume": [],
+                }
+
+            for k in history[tf]:
+                if k in bar:
+                    history[tf][k].append(bar[k])
+
+        # -----------------------------------------
+        # Build state
+        # -----------------------------------------
         state = {
             "time": item["time"],
             "index": item["index"],
@@ -12,9 +37,14 @@ def run_backtest(bars_stream, strategy, params):
             "position": position,
         }
 
+        # expose history to strategy
+        params["_history"] = history
+
         action = strategy(state, params)
 
-        # select TF - first available is default
+        # -----------------------------------------
+        # Execution (still single-position model)
+        # -----------------------------------------
         tf = next(iter(state["bars"]))
         close_price = state["bars"][tf]["close"]
 

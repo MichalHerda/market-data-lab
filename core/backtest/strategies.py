@@ -1,3 +1,5 @@
+# strategies.py
+
 import core.indicators as indicators                # noqa
 
 
